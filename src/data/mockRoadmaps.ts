@@ -6,8 +6,8 @@ export const DEFAULT_USER_PROFILE: UserProfile = {
   gradeOrYear: '12th Grade / High School Senior',
   skills: ['Math & Physics', 'Basic Python / Coding', 'Problem Solving', 'Analytical Thinking'],
   interests: ['Artificial Intelligence', 'Robotics & Hardware', 'Software Engineering'],
-  workStyle: ['Remote & Hybrid', 'High Growth & Innovation'],
-  budgetTimeline: ['Moderate Budget (University / Degree Focused)']
+  workStyle: 'Remote & Hybrid',
+  budgetTimeline: 'Moderate Budget (University / Degree Focused)'
 };
 
 export const MOCK_ROADMAPS_HIGH_SCHOOL: RoadmapPathway[] = [

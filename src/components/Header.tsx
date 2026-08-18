@@ -1,5 +1,5 @@
 import React from 'react';
-import { Compass, Sparkles, Key, Sun, Moon, RotateCcw, CheckCircle, FileText, CheckSquare } from 'lucide-react';
+import { Compass, Sparkles, Key, Sun, Moon, RotateCcw, FileText, CheckSquare } from 'lucide-react';
 import { getStoredApiKey } from '../services/geminiService';
 
 interface HeaderProps {
