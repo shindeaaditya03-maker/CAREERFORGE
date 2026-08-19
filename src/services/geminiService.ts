@@ -49,7 +49,7 @@ async function callGeminiApi(prompt: string, apiKey: string): Promise<string> {
             parts: [{ text: prompt }]
           }],
           generationConfig: {
-            temperature: 0.7,
+            temperature: 0.8,
             maxOutputTokens: 3000,
           }
         })
@@ -249,7 +249,7 @@ Return strictly raw JSON.
 }
 
 /**
- * AI Mentor Chat Assistant
+ * AI Mentor Chat Assistant - Human-like "Alex" Persona
  */
 export async function sendMentorChatMessage(
   messages: ChatMessage[],
@@ -260,60 +260,66 @@ export async function sendMentorChatMessage(
   const lastUserMsg = messages[messages.length - 1]?.text.toLowerCase() || '';
 
   if (!apiKey) {
-    console.log("No Gemini API key found for chat. Using dynamic fallback counselor.");
-    return generateDynamicFallbackResponse(lastUserMsg, currentRoadmap, userProfile);
+    console.log("No Gemini API key found for chat. Using dynamic Alex counselor.");
+    return generateDynamicAlexResponse(lastUserMsg, currentRoadmap, userProfile);
   }
 
-  const roadmapContext = currentRoadmap ? `Current Selected Roadmap: ${currentRoadmap.title}\nOverview: ${currentRoadmap.overview}\nMilestones: ${currentRoadmap.steps.map(s => s.phaseTitle).join(', ')}` : 'No specific roadmap selected yet.';
+  const roadmapContext = currentRoadmap
+    ? `Target Pathway Selected: ${currentRoadmap.title}\nPathway Summary: ${currentRoadmap.overview}\nMilestones: ${currentRoadmap.steps.map(s => s.phaseTitle).join(', ')}`
+    : 'No specific roadmap selected yet.';
 
   const prompt = `
-You are CAREERFORGE AI Mentor, an empathetic, expert career counselor for high schoolers, college students, and working professionals.
-User Profile: Stage: ${userProfile.stage}, Stream: ${userProfile.streamOrField}.
+You are Alex — a super friendly, warm, empathetic, and human-like AI Career Mentor. You help students, college grads, and career switchers map out and hit their biggest career goals.
+
+YOUR PERSONA & STYLE:
+- Name: Alex 👋
+- Tone: Warm, energetic, conversational, supportive, and natural — like an awesome mentor or caring career coach.
+- Avoid stiff, corporate, robotic AI phrasing (NEVER say "As an AI language model..." or "As your CAREERFORGE AI Mentor, I recommend...").
+- Use natural language, friendly emojis, and real human warmth.
+- Keep responses engaging, relatable, and directly actionable (2-3 natural paragraphs).
+
+USER PROFILE:
+- Stage: ${userProfile.stage} (e.g. high_school, college, professional, switcher)
+- Stream / Background: ${userProfile.streamOrField}
+- Core Skills: ${userProfile.skills.join(', ')}
 ${roadmapContext}
 
-Chat History:
-${messages.map(m => `${m.sender.toUpperCase()}: ${m.text}`).join('\n')}
+CHAT HISTORY:
+${messages.map(m => `${m.sender === 'user' ? 'USER' : 'ALEX'}: ${m.text}`).join('\n')}
 
-Respond to the latest user message with clear, actionable, encouraging advice. Keep responses concise (2-4 paragraphs max). Use bullet points where appropriate.
+Task:
+Respond as Alex to the user's message. Be warm, empathetic, encouraging, and human!
 `;
 
   try {
     return await callGeminiApi(prompt, apiKey);
   } catch (err: any) {
     console.error("Mentor chat API error:", err);
-    const errorString = err?.message || String(err);
-    if (errorString.includes('API key') || errorString.includes('400') || errorString.includes('403')) {
-      return `⚠️ API Key Error: ${errorString}.\n\nPlease verify your API key in the top bar ("Key" button) or add VITE_GEMINI_API_KEY in Vercel Environment Variables.`;
-    }
-    return generateDynamicFallbackResponse(lastUserMsg, currentRoadmap, userProfile);
+    return generateDynamicAlexResponse(lastUserMsg, currentRoadmap, userProfile);
   }
 }
 
 /**
- * Dynamic Smart Response generator when offline or during API hiccups
+ * Human-like Dynamic Response Generator (Alex Persona)
  */
-function generateDynamicFallbackResponse(
+function generateDynamicAlexResponse(
   query: string,
   roadmap: RoadmapPathway | null,
   profile: UserProfile
 ): string {
-  const title = roadmap ? roadmap.title : 'your career path';
+  const title = roadmap ? roadmap.title : 'your career journey';
 
   if (query.includes('parent') || query.includes('explain') || query.includes('family')) {
-    return `To explain **${title}** to your parents or family:\n\n1. **Highlight Economic Stability**: Mention that this field has strong growth metrics (${roadmap ? roadmap.growthOutlook : '+25% annual growth'}).\n2. **Formal Degree Backing**: Reassure them that this path includes recognized university degrees (B.Tech / B.Sc) and accredited certifications.\n3. **Financial Return**: Share the entry salary expectations (${roadmap ? roadmap.entryLevelSalary : 'competitive packages'}).\n\n💡 **Tip**: Click the **"Generate Parent Brief"** button at the top of your roadmap screen for a ready-to-print 1-page executive report!`;
+    return `Hey! I completely get where you're coming from — explaining modern careers to family can feel like translating two different languages! 😅\n\nHere is how I recommend breaking down **${title}** to them:\n\n• **Focus on Growth & Security**: Remind them that this field is expanding fast (${roadmap ? roadmap.growthOutlook : '+25% annual growth'}), meaning strong long-term job security.\n• **Highlight Accredited Degrees**: Reassure them that this path is backed by formal degrees (B.Tech / B.Sc) or top-tier industry certifications.\n• **Show the ROI**: Point out the solid starting salaries (${roadmap ? roadmap.entryLevelSalary : 'great packages'})!\n\n💡 **Pro Tip**: Click the **"Generate Parent Brief"** button at the top of your roadmap screen. I've written a ready-to-print 1-page executive summary you can physically hand to your parents!`;
   }
 
   if (query.includes('exam') || query.includes('jee') || query.includes('cuet') || query.includes('clat') || query.includes('sat') || query.includes('cert')) {
-    return `For target exams and certifications in **${title}**:\n\n• **Schedule Strategy**: Dedicate 2-3 hours daily during weekdays strictly for core conceptual prep, and reserved weekends for full-length mock exams.\n• **High-Yield Practice**: Solve the last 5 years' question papers to understand exam patterns and weak areas.\n• **Parallel Certifications**: If aiming for skill-first certs (e.g., AWS, Meta, IBM), allocate 45 minutes of evening hands-on lab practice.`;
+    return `Cracking entrance exams and certifications for **${title}** is all about smart consistency, not burning out! 🔥\n\nHere's my game plan for you:\n\n1. **Daily Focus Window**: Block out 2 dedicated hours every weekday just for solving past question papers and core concepts.\n2. **Weekend Mock Tests**: Take full-length timed tests on weekends — analyzing your mistakes is where 80% of your score gains come from.\n3. **Parallel Certifications**: If you're building towards certs (like AWS or Meta), spend 30 minutes in the evening building hands-on labs.\n\nYou've got this! What specific subject or exam section feels trickiest right now?`;
   }
 
   if (query.includes('project') || query.includes('portfolio') || query.includes('build') || query.includes('resume')) {
-    return `To build a standout portfolio for **${title}**:\n\n1. **Foundational Project**: Build a full-stack CRUD web or data application solving a real-world problem in ${profile.streamOrField}.\n2. **Advanced AI / Domain Project**: Develop an open-source tool incorporating LLM APIs, dataset pipelines, or cloud deployment.\n3. **GitHub Presence**: Document your repositories with clear READMEs, system architecture diagrams, and live demo links.`;
+    return `Building an awesome portfolio for **${title}** is your ticket to standing out from 99% of applicants! 🚀\n\nHere are 2 high-impact projects you should build:\n\n1. **Core Domain Application**: Create a full-stack tool that solves a real problem in ${profile.streamOrField} (e.g. an AI-powered dashboard or automated data pipeline).\n2. **Open Source & Cloud**: Host your code on GitHub with a clean README, architecture diagram, and live Vercel/Cloud demo link.\n\nWhich project idea sounds most exciting to start building first?`;
   }
 
-  if (query.includes('skill') || query.includes('learn') || query.includes('gap')) {
-    return `Looking at your active roadmap for **${title}**:\n\n• Focus first on mastering your **Foundational Skills** (e.g., Problem Solving, Data Structures, Mathematics).\n• Use the **Skill Gap Tracker** tab to check off skills you already know vs skills to acquire.\n• Build mini-projects for each unchecked skill to gain practical confidence!`;
-  }
-
-  return `As your CAREERFORGE AI Mentor, I recommend focusing on the current phase of **${title}**.\n\n• **Immediate Action**: Work through the key milestones listed in Phase 1 of your roadmap.\n• **Skill Readiness**: Check off your known skills in the Skill Gap Tracker tab.\n• **Question**: Would you like advice on target entrance exams, portfolio projects, or preparing for interviews for this specific path?`;
+  return `Hey there! I'm Alex, your personal AI career guide 👋 I'm right here to help you match, reach, and crush your goals in **${title}**!\n\nRight now, your best move is working through the milestones in your roadmap and checking off your skills in the **Skill Gap Tracker** tab.\n\nWhat would you like to brainstorm next — entrance exam strategy, cool portfolio projects, or how to land internships?`;
 }

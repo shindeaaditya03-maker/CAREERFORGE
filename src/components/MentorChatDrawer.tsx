@@ -9,9 +9,9 @@ interface MentorChatDrawerProps {
 }
 
 const SUGGESTED_PROMPTS = [
-  "How do I prepare for target entrance exams alongside my current schedule?",
-  "What 2 projects should I build to boost my resume for this path?",
-  "How can I explain this high-tech career choice clearly to my parents?",
+  "Hey Alex, how do I balance entrance exams with my current schedule?",
+  "What 2 portfolio projects should I build to stand out?",
+  "How can I explain this high-tech career path to my parents?",
   "What backup options exist if I miss the top entrance exam rank?"
 ];
 
@@ -24,7 +24,7 @@ export const MentorChatDrawer: React.FC<MentorChatDrawerProps> = ({
     {
       id: 'welcome-1',
       sender: 'ai',
-      text: `Hello! I am your CAREERFORGE AI Mentor. I have reviewed your profile and your roadmap. What questions can I answer about entrance exams, skill prep, or career strategies?`,
+      text: `Hey there! 👋 I'm Alex, your personal AI career guide. I'm right here to help you match, plan, and reach your dream career goals! What's on your mind today?`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
   ]);
@@ -80,7 +80,7 @@ export const MentorChatDrawer: React.FC<MentorChatDrawerProps> = ({
           <Sparkles className="w-5 h-5 group-hover:rotate-45 transition-transform" />
           <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-cyan-400 rounded-full animate-ping" />
         </div>
-        <span className="text-xs font-bold tracking-wide">AI Career Mentor</span>
+        <span className="text-xs font-bold tracking-wide">Alex • AI Mentor</span>
       </button>
 
       {/* Slide-over Chat Drawer */}
@@ -98,9 +98,9 @@ export const MentorChatDrawer: React.FC<MentorChatDrawerProps> = ({
                     <Sparkles className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-extrabold text-white text-sm">AI Career Mentor</h3>
+                    <h3 className="font-extrabold text-white text-sm">Alex • AI Career Mentor</h3>
                     <p className="text-[11px] text-slate-400">
-                      Context: {currentRoadmap ? currentRoadmap.title : 'General Guidance'}
+                      Target: {currentRoadmap ? currentRoadmap.title : 'General Guidance'}
                     </p>
                   </div>
                 </div>
@@ -144,7 +144,7 @@ export const MentorChatDrawer: React.FC<MentorChatDrawerProps> = ({
                 {isTyping && (
                   <div className="flex items-center gap-2 text-slate-400 text-xs italic">
                     <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-400" />
-                    <span>Gemini AI is crafting your career advice...</span>
+                    <span>Alex is thinking...</span>
                   </div>
                 )}
                 <div ref={chatEndRef} />
@@ -180,7 +180,7 @@ export const MentorChatDrawer: React.FC<MentorChatDrawerProps> = ({
                     type="text"
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    placeholder="Ask mentor a follow-up question..."
+                    placeholder="Ask Alex a question..."
                     className="flex-1 px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs"
                   />
                   <button
