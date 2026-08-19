@@ -77,29 +77,59 @@
   background: rgba(148, 163, 184, 0.6);
 }
 
+/* Heading typography styling using Outfit font */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Outfit', sans-serif !important;
+}
+
+/* Slide in animation for side drawer */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* Printable Parent Brief Styles */
 @media print {
-  body {
+  /* Hide everything on the page except the brief container */
+  body * {
+    visibility: hidden;
+  }
+  .printable-content, .printable-content * {
+    visibility: visible;
+  }
+  .printable-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
     background: white !important;
     color: black !important;
   }
   .no-print {
     display: none !important;
   }
-  .print-only {
-    display: block !important;
-  }
   .glass-panel, .glass-card {
     background: white !important;
-    border: 1px solid #ccc !important;
+    border: 1px solid #e2e8f0 !important;
     box-shadow: none !important;
     backdrop-filter: none !important;
-    color: black !important;
+    color: #1e293b !important;
   }
   .text-white, .text-slate-100, .text-slate-200, .text-slate-300 {
-    color: #111827 !important;
+    color: #0f172a !important;
   }
   .text-slate-400, .text-slate-500 {
-    color: #4b5563 !important;
+    color: #64748b !important;
   }
 }
+

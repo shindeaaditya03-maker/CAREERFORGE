@@ -21,6 +21,17 @@ export const ParentBriefModal: React.FC<ParentBriefModalProps> = ({
     window.print();
   };
 
+  // Extract all unique exams from the pathway steps
+  const allExams = pathway.steps.reduce((acc, step) => {
+    step.entranceExamsOrCerts.forEach(item => {
+      if (item.type === 'Exam' && !acc.some(x => x.name === item.name)) {
+        acc.push(item);
+      }
+    });
+    return acc;
+  }, [] as typeof pathway.steps[0]['entranceExamsOrCerts']);
+
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/85 backdrop-blur-md animate-fade-in overflow-y-auto">
       <div className="relative w-full max-w-4xl p-6 sm:p-10 glass-card rounded-3xl border border-slate-700/60 shadow-2xl my-8">
@@ -58,7 +69,7 @@ export const ParentBriefModal: React.FC<ParentBriefModalProps> = ({
         <div className="space-y-6 text-slate-200 printable-content">
           
           {/* Header Banner */}
-          <div className="p-6 rounded-2xl bg-gradient-to-r from-indigo-950/60 via-slate-900 to-blue-950/60 border border-indigo-500/20">
+          <div className="p-6 rounded-2xl bg-gradient-to-r from-indigo-950/60 via-slate-900 to-violet-950/60 border border-indigo-500/20">
             <div className="flex items-center justify-between gap-4 mb-2">
               <span className="text-xs font-bold uppercase tracking-widest text-indigo-400">
                 EXECUTIVE CAREER BRIEF • CAREERFORGE
@@ -72,12 +83,12 @@ export const ParentBriefModal: React.FC<ParentBriefModalProps> = ({
           </div>
 
           {/* Core Insights Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-sans">
             
             {/* Why This Career */}
             <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
               <h4 className="font-bold text-white text-sm flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-blue-400" /> What is this career?
+                <Sparkles className="w-4 h-4 text-indigo-400" /> What is this career?
               </h4>
               <p className="text-xs text-slate-300 leading-relaxed">{brief.whyThisCareer}</p>
             </div>
@@ -101,9 +112,28 @@ export const ParentBriefModal: React.FC<ParentBriefModalProps> = ({
             {/* Degree Backing */}
             <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
               <h4 className="font-bold text-white text-sm flex items-center gap-2">
-                <GraduationCap className="w-4 h-4 text-purple-400" /> Formal Education & Degree Backing
+                <GraduationCap className="w-4 h-4 text-purple-400" /> Formal Education & Exams
               </h4>
-              <p className="text-xs text-slate-300 leading-relaxed">{brief.formalDegreeBacking}</p>
+              <p className="text-xs text-slate-300 leading-relaxed mb-2">{brief.formalDegreeBacking}</p>
+              
+              {allExams.length > 0 && (
+                <div className="pt-2 border-t border-slate-800 mt-2">
+                  <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider block mb-1">
+                    Key Target Entrance Exams:
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {allExams.map((exam, i) => (
+                      <span
+                        key={i}
+                        title={exam.details}
+                        className="px-2.5 py-0.5 rounded-lg bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 text-[10px] font-semibold"
+                      >
+                        {exam.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
           </div>

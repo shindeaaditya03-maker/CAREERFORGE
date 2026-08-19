@@ -30,16 +30,16 @@ export const Header: React.FC<HeaderProps> = ({
           
           {/* Logo & Tagline */}
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab(hasRoadmaps ? 'roadmaps' : 'assessment')}>
-            <div className="relative p-2.5 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-2xl shadow-lg shadow-blue-500/25 group">
+            <div className="relative p-2.5 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-2xl shadow-lg shadow-indigo-500/25 group">
               <Compass className="w-7 h-7 text-white transition-transform group-hover:rotate-45 duration-300" />
               <div className="absolute -top-1 -right-1 w-3 h-3 bg-cyan-400 rounded-full animate-ping" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xl font-extrabold tracking-tight text-white font-sans bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-slate-300">
-                  CAREER<span className="text-blue-500">FORGE</span>
+                  CAREER<span className="text-violet-500">FORGE</span>
                 </span>
-                <span className="px-2 py-0.5 text-[10px] font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full uppercase tracking-widest">
+                <span className="px-2 py-0.5 text-[10px] font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-full uppercase tracking-widest">
                   AI v2.5
                 </span>
               </div>
@@ -55,7 +55,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => setActiveTab('assessment')}
               className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all ${
                 activeTab === 'assessment'
-                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
               }`}
             >
@@ -70,7 +70,7 @@ export const Header: React.FC<HeaderProps> = ({
                 !hasRoadmaps
                   ? 'opacity-40 cursor-not-allowed text-slate-500'
                   : activeTab === 'roadmaps'
-                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
               }`}
             >
@@ -85,7 +85,7 @@ export const Header: React.FC<HeaderProps> = ({
                 !hasRoadmaps
                   ? 'opacity-40 cursor-not-allowed text-slate-500'
                   : activeTab === 'skillgap'
-                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
               }`}
             >

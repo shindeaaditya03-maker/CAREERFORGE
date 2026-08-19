@@ -34,14 +34,14 @@ export const RoadmapView: React.FC<RoadmapViewProps> = ({
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in space-y-8">
       {/* Top Banner */}
       <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl -z-10 pointer-events-none" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl -z-10 pointer-events-none" />
 
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <span className="px-3 py-1 text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full">
+            <span className="px-3 py-1 text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-full">
               {userProfile.stage === 'high_school' ? '🎓 High School / 12th Grade' : userProfile.stage === 'college' ? '📚 College / Undergrad' : '💼 Working Professional'}
             </span>
-            <span className="text-xs text-slate-400 font-medium">| {userProfile.streamOrField}</span>
+            <span className="text-xs text-slate-400 font-medium font-sans">| {userProfile.streamOrField}</span>
             {isLiveAI && (
               <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full flex items-center gap-1">
                 <Sparkles className="w-3 h-3" /> Gemini Live Generated
@@ -89,7 +89,7 @@ export const RoadmapView: React.FC<RoadmapViewProps> = ({
               }}
               className={`flex items-center gap-3 px-5 py-3.5 rounded-2xl text-xs font-bold border transition-all whitespace-nowrap ${
                 isActive
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-400 shadow-lg shadow-blue-500/20'
+                  ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white border-indigo-400 shadow-lg shadow-indigo-500/20'
                   : 'bg-slate-900/80 text-slate-400 border-slate-800 hover:text-white hover:bg-slate-900'
               }`}
             >

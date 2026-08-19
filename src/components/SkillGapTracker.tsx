@@ -134,7 +134,7 @@ export const SkillGapTracker: React.FC<SkillGapTrackerProps> = ({
               <span
                 className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border ${
                   skill.difficulty === 'Beginner'
-                    ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                    ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'
                     : skill.difficulty === 'Intermediate'
                     ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                     : 'bg-rose-500/10 text-rose-400 border-rose-500/20'

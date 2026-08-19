@@ -1,5 +1,5 @@
 import type { UserProfile, RoadmapPathway, ParentBrief, ChatMessage } from '../types/career';
-import { MOCK_ROADMAPS_HIGH_SCHOOL, MOCK_PARENT_BRIEFS } from '../data/mockRoadmaps';
+import { MOCK_PARENT_BRIEFS, getFallbackRoadmaps } from '../data/mockRoadmaps';
 
 const API_KEY_STORAGE_KEY = 'CAREERFORGE_GEMINI_KEY';
 
@@ -9,11 +9,12 @@ export const getStoredApiKey = (): string => {
     import.meta.env.VITE_GEMINI_API_KEY ||
     import.meta.env.GEMINI_API_KEY ||
     '';
-  return rawKey.trim().replace(/^["']|["']$/g, '');
+  // Strip quotes and trim whitespaces
+  return rawKey.trim().replace(/^["']|["']$/g, '').trim();
 };
 
 export const setStoredApiKey = (key: string): void => {
-  const cleaned = key.trim().replace(/^["']|["']$/g, '');
+  const cleaned = key.trim().replace(/^["']|["']$/g, '').trim();
   if (cleaned) {
     localStorage.setItem(API_KEY_STORAGE_KEY, cleaned);
   } else {
@@ -23,15 +24,15 @@ export const setStoredApiKey = (key: string): void => {
 
 const VALID_GEMINI_MODELS = [
   'gemini-1.5-flash',
-  'gemini-1.5-pro',
-  'gemini-1.0-pro'
+  'gemini-2.0-flash',
+  'gemini-1.5-pro'
 ];
 
 /**
- * Call Gemini REST API directly using standard fetch with multi-model fallback chain
+ * Call Gemini REST API directly using standard fetch with multi-model fallback chain and temperature control
  */
-async function callGeminiApi(prompt: string, apiKey: string): Promise<string> {
-  const cleanKey = apiKey.trim().replace(/^["']|["']$/g, '');
+async function callGeminiApi(prompt: string, apiKey: string, temperature: number = 0.85): Promise<string> {
+  const cleanKey = apiKey.trim().replace(/^["']|["']$/g, '').trim();
   if (!cleanKey) {
     throw new Error("NO_API_KEY");
   }
@@ -52,7 +53,7 @@ async function callGeminiApi(prompt: string, apiKey: string): Promise<string> {
             parts: [{ text: prompt }]
           }],
           generationConfig: {
-            temperature: 0.85,
+            temperature: temperature,
             maxOutputTokens: 2500,
           }
         })
@@ -69,7 +70,7 @@ async function callGeminiApi(prompt: string, apiKey: string): Promise<string> {
       const data = await response.json();
       const textOutput = data.candidates?.[0]?.content?.parts?.[0]?.text;
       if (textOutput) {
-        console.log(`[Gemini API Success] Received live response from ${modelName}`);
+        console.log(`[Gemini API Success] Received live response from ${modelName} with temperature ${temperature}`);
         return textOutput;
       }
     } catch (err: any) {
@@ -99,10 +100,11 @@ function parseJsonResponse<T>(text: string): T {
  */
 export async function generateCareerRoadmaps(userProfile: UserProfile): Promise<{ roadmaps: RoadmapPathway[]; isLiveAI: boolean }> {
   const apiKey = getStoredApiKey();
+  const fallbackData = getFallbackRoadmaps(userProfile.streamOrField);
 
   if (!apiKey) {
-    console.log("[CAREERFORGE] No Gemini API key provided. Using fallback demo roadmaps.");
-    return { roadmaps: MOCK_ROADMAPS_HIGH_SCHOOL, isLiveAI: false };
+    console.log(`[CAREERFORGE] No Gemini API key provided. Using fallback roadmaps for stream: ${userProfile.streamOrField}`);
+    return { roadmaps: fallbackData, isLiveAI: false };
   }
 
   const systemPrompt = `
@@ -147,7 +149,7 @@ Return ONLY a valid JSON array of 3 objects conforming to this TypeScript struct
           { "name": "Skill Name", "difficulty": "Beginner" | "Intermediate" | "Advanced" }
         ],
         "entranceExamsOrCerts": [
-          { "name": "JEE / AWS / Cert Name", "type": "Exam" | "Cert" | "Degree" | "Portfolio", "details": "Brief info" }
+          { "name": "JEE / NEET / CLAT / Cert Name", "type": "Exam" | "Cert" | "Degree" | "Portfolio", "details": "Brief info" }
         ],
         "recommendedDegreesOrCourses": ["Degree or Course Name"],
         "learningResources": [
@@ -161,12 +163,13 @@ IMPORTANT: Return strictly raw JSON. Do NOT wrap in markdown explanation text.
 `;
 
   try {
-    const rawResult = await callGeminiApi(systemPrompt, apiKey);
+    // System 1: Rigid evaluation synthesis at temperature 0.4
+    const rawResult = await callGeminiApi(systemPrompt, apiKey, 0.4);
     const roadmaps = parseJsonResponse<RoadmapPathway[]>(rawResult);
     return { roadmaps, isLiveAI: true };
   } catch (err) {
     console.error("[CAREERFORGE] Gemini API generation failed, using fallback roadmaps:", err);
-    return { roadmaps: MOCK_ROADMAPS_HIGH_SCHOOL, isLiveAI: false };
+    return { roadmaps: fallbackData, isLiveAI: false };
   }
 }
 
@@ -185,10 +188,10 @@ export async function generateParentBrief(userProfile: UserProfile, pathway: Roa
       whyThisCareer: pathway.overview,
       industryStabilityGrowth: pathway.growthOutlook,
       financialROI: `Entry-level salary starts around ${pathway.entryLevelSalary}, growing to ${pathway.midCareerSalary} within 5 years.`,
-      formalDegreeBacking: `Backed by accredited computer science/engineering degrees and industry-recognized professional certifications.`,
+      formalDegreeBacking: `Backed by accredited university courses, entrance exams, and industry-recognized professional certifications.`,
       parentActionPlan: [
         'Support target skill development and exam/cert registrations.',
-        'Ensure access to computer equipment and high-speed internet.',
+        'Ensure access to study equipment and high-speed internet.',
         'Encourage networking and project building.'
       ],
       automationRiskRating: 'Low'
@@ -198,6 +201,8 @@ export async function generateParentBrief(userProfile: UserProfile, pathway: Roa
   const systemPrompt = `
 You are an executive career advisor.
 Generate a reassuring, highly structured 1-page "Parent / Stakeholder Brief" for a student/professional pursuing the career pathway: "${pathway.title}".
+Include details about relevant entrance exams (like JEE, NEET, CUET, CLAT, MHT-CET, NATA, IPMAT) if they apply to this pathway.
+Provide a clear 5-10 Year Industry Outlook, ROI metrics, degree backing, and action advice for the parent.
 
 User Profile: Stage: ${userProfile.stage}, Stream: ${userProfile.streamOrField}.
 Pathway Details:
@@ -214,9 +219,9 @@ Generate a JSON object matching this TypeScript structure:
   "targetAudience": "${userProfile.stage === 'high_school' || userProfile.stage === 'college' ? 'Parent' : 'Stakeholder'}",
   "executiveSummary": "A clear 2-3 sentence overview explaining why this is a high-opportunity choice.",
   "whyThisCareer": "Explanation in simple, non-jargon language of what the job involves and its real-world impact.",
-  "industryStabilityGrowth": "Detailed breakdown of 5-10 year market demand and economic stability.",
-  "financialROI": "Financial return on investment analysis (starting salary vs growth).",
-  "formalDegreeBacking": "Details on official university degrees, entrance exams, or accredited certifications backing this path.",
+  "industryStabilityGrowth": "Detailed breakdown of 5-10 year market demand, automation resilience, and economic stability.",
+  "financialROI": "Financial return on investment analysis (starting salary vs growth and study cost factors).",
+  "formalDegreeBacking": "Details on official university degrees, national entrance exams (JEE/NEET/CLAT/etc.), or accredited certifications backing this path.",
   "parentActionPlan": [
     "Actionable bullet point 1",
     "Actionable bullet point 2",
@@ -229,11 +234,12 @@ Return strictly raw JSON.
 `;
 
   try {
-    const rawResult = await callGeminiApi(systemPrompt, apiKey);
+    // System 1: Rigid evaluation synthesis at temperature 0.4
+    const rawResult = await callGeminiApi(systemPrompt, apiKey, 0.4);
     return parseJsonResponse<ParentBrief>(rawResult);
   } catch (err) {
     console.error("[CAREERFORGE] Gemini Parent Brief generation failed, returning fallback:", err);
-    return {
+    return MOCK_PARENT_BRIEFS[pathway.id] || {
       pathwayId: pathway.id,
       pathwayTitle: pathway.title,
       targetAudience: 'Parent',
@@ -241,10 +247,10 @@ Return strictly raw JSON.
       whyThisCareer: pathway.overview,
       industryStabilityGrowth: pathway.growthOutlook,
       financialROI: `Entry-level salary starting at ${pathway.entryLevelSalary}.`,
-      formalDegreeBacking: `Backed by accredited university courses and certifications.`,
+      formalDegreeBacking: `Backed by accredited university courses, exams, and certifications.`,
       parentActionPlan: [
-        'Encourage foundation math and coding practice.',
-        'Support entrance exam registrations.',
+        'Support focus on foundational stream preparations.',
+        'Support registration for entrance exams.',
         'Provide a dedicated study environment.'
       ],
       automationRiskRating: 'Low'
@@ -300,7 +306,8 @@ Respond directly and naturally as Alex to the user's latest message: "${lastUser
 `;
 
   try {
-    const liveResponse = await callGeminiApi(prompt, apiKey);
+    // System 2: Warm chatbot at temperature 0.85
+    const liveResponse = await callGeminiApi(prompt, apiKey, 0.85);
     return { text: liveResponse, isLive: true };
   } catch (err: any) {
     const errMsg = err?.message || String(err);
@@ -329,15 +336,15 @@ function generateDynamicAlexResponse(
   const title = roadmap ? roadmap.title : 'your career journey';
 
   if (query.includes('parent') || query.includes('explain') || query.includes('family')) {
-    return `Hey! I completely get where you're coming from — explaining modern careers to family can feel like translating two different languages! 😅\n\nHere is how I recommend breaking down **${title}** to them:\n\n• **Focus on Growth & Security**: Remind them that this field is expanding fast (${roadmap ? roadmap.growthOutlook : '+25% annual growth'}), meaning strong long-term job security.\n• **Highlight Accredited Degrees**: Reassure them that this path is backed by formal degrees (B.Tech / B.Sc) or top-tier industry certifications.\n• **Show the ROI**: Point out the solid starting salaries (${roadmap ? roadmap.entryLevelSalary : 'great packages'})!\n\n💡 **Pro Tip**: Click the **"Generate Parent Brief"** button at the top of your roadmap screen. I've written a ready-to-print 1-page executive summary you can physically hand to your parents!`;
+    return `Hey! I completely get where you're coming from — explaining modern careers to family can feel like translating two different languages! 😅\n\nHere is how I recommend breaking down **${title}** to them:\n\n• **Focus on Growth & Security**: Remind them that this field is expanding fast (${roadmap ? roadmap.growthOutlook : '+25% annual growth'}), meaning strong long-term job security.\n• **Highlight Accredited Degrees**: Reassure them that this path is backed by formal degrees or top-tier industry certifications.\n• **Show the ROI**: Point out the solid starting salaries (${roadmap ? roadmap.entryLevelSalary : 'great packages'})!\n\n💡 **Pro Tip**: Click the **"Generate Parent Brief"** button at the top of your roadmap screen. I've written a ready-to-print 1-page executive summary you can physically hand to your parents!`;
   }
 
-  if (query.includes('exam') || query.includes('jee') || query.includes('cuet') || query.includes('clat') || query.includes('sat') || query.includes('cert')) {
-    return `Cracking entrance exams and certifications for **${title}** is all about smart consistency, not burning out! 🔥\n\nHere's my game plan for you:\n\n1. **Daily Focus Window**: Block out 2 dedicated hours every weekday just for solving past question papers and core concepts.\n2. **Weekend Mock Tests**: Take full-length timed tests on weekends — analyzing your mistakes is where 80% of your score gains come from.\n3. **Parallel Certifications**: If you're building towards certs (like AWS or Meta), spend 30 minutes in the evening building hands-on labs.\n\nYou've got this! What specific subject or exam section feels trickiest right now?`;
+  if (query.includes('exam') || query.includes('jee') || query.includes('neet') || query.includes('cuet') || query.includes('clat') || query.includes('sat') || query.includes('cert') || query.includes('nata') || query.includes('ipmat')) {
+    return `Cracking entrance exams and certifications for **${title}** is all about smart consistency, not burning out! 🔥\n\nHere's my game plan for you:\n\n1. **Daily Focus Window**: Block out 2 dedicated hours every weekday just for solving past question papers and core concepts.\n2. **Weekend Mock Tests**: Take full-length timed tests on weekends — analyzing your mistakes is where 80% of your score gains come from.\n3. **Parallel Certifications**: If you're building towards certs, spend 30 minutes in the evening building hands-on projects.\n\nYou've got this! What specific subject or exam section feels trickiest right now?`;
   }
 
   if (query.includes('project') || query.includes('portfolio') || query.includes('build') || query.includes('resume')) {
-    return `Building an awesome portfolio for **${title}** is your ticket to standing out from 99% of applicants! 🚀\n\nHere are 2 high-impact projects you should build:\n\n1. **Core Domain Application**: Create a full-stack tool that solves a real problem in ${streamOrField} (e.g. an AI-powered dashboard or automated data pipeline).\n2. **Open Source & Cloud**: Host your code on GitHub with a clean README, architecture diagram, and live Vercel/Cloud demo link.\n\nWhich project idea sounds most exciting to start building first?`;
+    return `Building an awesome portfolio for **${title}** is your ticket to standing out from 99% of applicants! 🚀\n\nHere are 2 high-impact projects you should build:\n\n1. **Core Domain Application**: Create a tool that solves a real-world problem in ${streamOrField} (e.g. an interactive mock model or analytics spreadsheet).\n2. **Documentation & Showcase**: Share your process online with clean notes, architecture steps, and clear results.\n\nWhich project idea sounds most exciting to start building first?`;
   }
 
   return `Hey there! I'm Alex, your personal AI career guide 👋 I'm right here to help you match, plan, and crush your goals in **${title}**!\n\nRight now, your best move is working through the milestones in your roadmap and checking off your skills in the **Skill Gap Tracker** tab.\n\nWhat would you like to brainstorm next — entrance exam strategy, cool portfolio projects, or how to land internships?`;

@@ -42,16 +42,16 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, onKey
         </button>
 
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-3 bg-blue-500/10 text-blue-400 rounded-xl border border-blue-500/20">
+          <div className="p-3 bg-indigo-500/10 text-indigo-400 rounded-xl border border-indigo-500/20">
             <Key className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-white">Gemini API Key</h3>
+            <h3 className="text-xl font-bold text-white font-sans">Gemini API Key</h3>
             <p className="text-xs text-slate-400">Configure key for live AI generation</p>
           </div>
         </div>
 
-        <form onSubmit={handleSave} className="space-y-4">
+        <form onSubmit={handleSave} className="space-y-4 font-sans">
           <div>
             <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
               API Key (Free Tier Gemini API)
@@ -61,12 +61,12 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, onKey
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="AIzaSy..."
-              className="w-full px-4 py-3 bg-slate-900/90 border border-slate-700/80 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              className="w-full px-4 py-3 bg-slate-900/90 border border-slate-700/80 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm font-medium"
             />
           </div>
 
           <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-xs text-slate-300 space-y-1">
-            <div className="flex items-center gap-2 text-blue-400 font-medium">
+            <div className="flex items-center gap-2 text-indigo-400 font-medium">
               <Sparkles className="w-4 h-4" />
               <span>Get Free Gemini API Key</span>
             </div>
@@ -77,7 +77,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, onKey
               href="https://aistudio.google.com/app/apikey"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1.5 text-blue-400 hover:text-blue-300 font-medium underline mt-1"
+              className="inline-flex items-center gap-1.5 text-indigo-400 hover:text-indigo-300 font-medium underline mt-1"
             >
               Get key from Google AI Studio <ExternalLink className="w-3 h-3" />
             </a>
@@ -106,7 +106,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, onKey
             )}
             <button
               type="submit"
-              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium text-sm rounded-xl shadow-lg shadow-blue-500/25 transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-medium text-sm rounded-xl shadow-lg shadow-indigo-500/25 transition-all"
             >
               {isSaved ? (
                 <>

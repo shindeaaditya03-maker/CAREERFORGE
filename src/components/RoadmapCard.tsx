@@ -24,7 +24,7 @@ export const RoadmapCard: React.FC<RoadmapCardProps> = ({
   const getTypeBadge = (type: string) => {
     switch (type) {
       case 'traditional':
-        return { label: 'Traditional / Higher Ed', color: 'bg-blue-500/10 text-blue-400 border-blue-500/20' };
+        return { label: 'Traditional / Higher Ed', color: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' };
       case 'tech_skill_first':
         return { label: 'High-Growth Skill-First', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' };
       case 'niche_emerging':
@@ -40,7 +40,7 @@ export const RoadmapCard: React.FC<RoadmapCardProps> = ({
     <div
       className={`glass-card rounded-3xl border transition-all duration-300 relative overflow-hidden ${
         isSelected
-          ? 'border-blue-500/80 shadow-2xl shadow-blue-500/10 ring-1 ring-blue-500/50'
+          ? 'border-indigo-500/80 shadow-2xl shadow-indigo-500/10 ring-1 ring-indigo-500/50'
           : 'border-slate-800 hover:border-slate-700'
       }`}
     >
@@ -50,9 +50,9 @@ export const RoadmapCard: React.FC<RoadmapCardProps> = ({
           <span className={`px-3 py-1 text-xs font-semibold rounded-full border ${typeInfo.color}`}>
             {typeInfo.label}
           </span>
-          <div className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded-full">
-            <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-            <span className="text-xs font-bold text-blue-300">{pathway.matchPercentage}% AI Match</span>
+          <div className="flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 rounded-full">
+            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="text-xs font-bold text-indigo-300">{pathway.matchPercentage}% AI Match</span>
           </div>
         </div>
 
@@ -61,7 +61,7 @@ export const RoadmapCard: React.FC<RoadmapCardProps> = ({
 
         {/* Why Matched */}
         <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 text-xs text-slate-300 mb-6">
-          <strong className="text-blue-400 font-semibold">Why this path fits: </strong>
+          <strong className="text-indigo-400 font-semibold">Why this path fits: </strong>
           {pathway.suitabilityReason}
         </div>
 
@@ -76,9 +76,9 @@ export const RoadmapCard: React.FC<RoadmapCardProps> = ({
 
           <div className="p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800">
             <div className="flex items-center gap-1.5 text-slate-400 text-xs font-medium mb-1">
-              <TrendingUp className="w-3.5 h-3.5 text-blue-400" /> 5-Yr Growth Outlook
+              <TrendingUp className="w-3.5 h-3.5 text-indigo-400" /> 5-Yr Growth Outlook
             </div>
-            <p className="text-xs sm:text-sm font-bold text-blue-400">{pathway.growthOutlook}</p>
+            <p className="text-xs sm:text-sm font-bold text-indigo-400">{pathway.growthOutlook}</p>
           </div>
 
           <div className="p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800">
@@ -111,7 +111,7 @@ export const RoadmapCard: React.FC<RoadmapCardProps> = ({
             onClick={onSelect}
             className={`px-5 py-2 text-xs font-semibold rounded-xl transition-all ${
               isSelected
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
                 : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
             }`}
           >
@@ -133,7 +133,7 @@ export const RoadmapCard: React.FC<RoadmapCardProps> = ({
             return (
               <div key={step.id} className="relative group">
                 {/* Timeline node icon */}
-                <div className="absolute -left-[31px] top-1 w-6 h-6 rounded-full bg-slate-900 border-2 border-blue-500 flex items-center justify-center text-[10px] font-bold text-blue-400 shadow-md">
+                <div className="absolute -left-[31px] top-1 w-6 h-6 rounded-full bg-slate-900 border-2 border-indigo-500 flex items-center justify-center text-[10px] font-bold text-indigo-400 shadow-md">
                   {idx + 1}
                 </div>
 
@@ -143,7 +143,7 @@ export const RoadmapCard: React.FC<RoadmapCardProps> = ({
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">
                         {step.timeframe}
                       </span>
                       <h5 className="font-bold text-sm text-white">{step.phaseTitle}</h5>
@@ -166,7 +166,7 @@ export const RoadmapCard: React.FC<RoadmapCardProps> = ({
                           <ul className="space-y-1.5">
                             {step.keyMilestones.map((m, i) => (
                               <li key={i} className="flex items-start gap-2 text-slate-300">
-                                <span className="text-blue-400 mt-0.5">•</span>
+                                <span className="text-indigo-400 mt-0.5">•</span>
                                 <span>{m}</span>
                               </li>
                             ))}
@@ -235,7 +235,7 @@ export const RoadmapCard: React.FC<RoadmapCardProps> = ({
                                 target="_blank"
                                 rel="noreferrer"
                                 onClick={(e) => e.stopPropagation()}
-                                className="flex items-center gap-1 px-3 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-blue-400 hover:text-blue-300 rounded-lg text-[11px]"
+                                className="flex items-center gap-1 px-3 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-indigo-400 hover:text-indigo-300 rounded-lg text-[11px]"
                               >
                                 <span>{res.title}</span>
                                 <ExternalLink className="w-3 h-3" />
