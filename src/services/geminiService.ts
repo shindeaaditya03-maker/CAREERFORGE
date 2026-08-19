@@ -21,11 +21,10 @@ export const setStoredApiKey = (key: string): void => {
   }
 };
 
-const GEMINI_MODELS = [
+const VALID_GEMINI_MODELS = [
   'gemini-1.5-flash',
-  'gemini-2.0-flash',
-  'gemini-2.5-flash',
-  'gemini-1.5-pro'
+  'gemini-1.5-pro',
+  'gemini-1.0-pro'
 ];
 
 /**
@@ -33,9 +32,13 @@ const GEMINI_MODELS = [
  */
 async function callGeminiApi(prompt: string, apiKey: string): Promise<string> {
   const cleanKey = apiKey.trim().replace(/^["']|["']$/g, '');
+  if (!cleanKey) {
+    throw new Error("NO_API_KEY");
+  }
+
   let lastErrorMsg = '';
 
-  for (const modelName of GEMINI_MODELS) {
+  for (const modelName of VALID_GEMINI_MODELS) {
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${cleanKey}`;
 
     try {
@@ -49,8 +52,8 @@ async function callGeminiApi(prompt: string, apiKey: string): Promise<string> {
             parts: [{ text: prompt }]
           }],
           generationConfig: {
-            temperature: 0.8,
-            maxOutputTokens: 3000,
+            temperature: 0.85,
+            maxOutputTokens: 2500,
           }
         })
       });
@@ -59,22 +62,23 @@ async function callGeminiApi(prompt: string, apiKey: string): Promise<string> {
         const errorData = await response.json().catch(() => ({}));
         const msg = errorData.error?.message || `HTTP ${response.status}`;
         lastErrorMsg = msg;
-        console.warn(`Gemini Model ${modelName} returned error: ${msg}. Trying fallback model...`);
+        console.warn(`[Gemini API] Model ${modelName} returned error: ${msg}. Trying next model...`);
         continue;
       }
 
       const data = await response.json();
       const textOutput = data.candidates?.[0]?.content?.parts?.[0]?.text;
       if (textOutput) {
+        console.log(`[Gemini API Success] Received live response from ${modelName}`);
         return textOutput;
       }
     } catch (err: any) {
       lastErrorMsg = err.message || String(err);
-      console.warn(`Fetch error for model ${modelName}:`, err);
+      console.warn(`[Gemini API] Fetch error for model ${modelName}:`, err);
     }
   }
 
-  throw new Error(lastErrorMsg || "All Gemini API model endpoints failed. Please check your API key.");
+  throw new Error(lastErrorMsg || "Gemini API request failed.");
 }
 
 /**
@@ -97,14 +101,14 @@ export async function generateCareerRoadmaps(userProfile: UserProfile): Promise<
   const apiKey = getStoredApiKey();
 
   if (!apiKey) {
-    console.log("No Gemini API key provided. Using fallback demo roadmaps.");
+    console.log("[CAREERFORGE] No Gemini API key provided. Using fallback demo roadmaps.");
     return { roadmaps: MOCK_ROADMAPS_HIGH_SCHOOL, isLiveAI: false };
   }
 
   const systemPrompt = `
 You are an expert AI Career Strategist for CAREERFORGE.
 Given the following student/professional profile:
-- Career Stage: ${userProfile.stage} (e.g. high_school, college, professional, switcher)
+- Career Stage: ${userProfile.stage}
 - Stream / Background: ${userProfile.streamOrField}
 - Current Level / Grade: ${userProfile.gradeOrYear}
 - Core Skills: ${userProfile.skills.join(', ')}
@@ -161,7 +165,7 @@ IMPORTANT: Return strictly raw JSON. Do NOT wrap in markdown explanation text.
     const roadmaps = parseJsonResponse<RoadmapPathway[]>(rawResult);
     return { roadmaps, isLiveAI: true };
   } catch (err) {
-    console.error("Gemini API generation failed, using fallback roadmaps:", err);
+    console.error("[CAREERFORGE] Gemini API generation failed, using fallback roadmaps:", err);
     return { roadmaps: MOCK_ROADMAPS_HIGH_SCHOOL, isLiveAI: false };
   }
 }
@@ -228,7 +232,7 @@ Return strictly raw JSON.
     const rawResult = await callGeminiApi(systemPrompt, apiKey);
     return parseJsonResponse<ParentBrief>(rawResult);
   } catch (err) {
-    console.error("Gemini Parent Brief generation failed, returning fallback:", err);
+    console.error("[CAREERFORGE] Gemini Parent Brief generation failed, returning fallback:", err);
     return {
       pathwayId: pathway.id,
       pathwayTitle: pathway.title,
@@ -249,19 +253,23 @@ Return strictly raw JSON.
 }
 
 /**
- * AI Mentor Chat Assistant - Human-like "Alex" Persona
+ * AI Mentor Chat Assistant - Live Gemini Call
  */
 export async function sendMentorChatMessage(
   messages: ChatMessage[],
   currentRoadmap: RoadmapPathway | null,
   userProfile: UserProfile
-): Promise<string> {
+): Promise<{ text: string; isLive: boolean; errorDetails?: string }> {
   const apiKey = getStoredApiKey();
-  const lastUserMsg = messages[messages.length - 1]?.text.toLowerCase() || '';
+  const lastUserMsg = messages[messages.length - 1]?.text || '';
 
   if (!apiKey) {
-    console.log("No Gemini API key found for chat. Using dynamic Alex counselor.");
-    return generateDynamicAlexResponse(lastUserMsg, currentRoadmap, userProfile);
+    console.log("[CAREERFORGE Chat] No API key present. Returning fallback Alex response.");
+    return {
+      text: generateDynamicAlexResponse(lastUserMsg.toLowerCase(), currentRoadmap, profileText(userProfile)),
+      isLive: false,
+      errorDetails: "No API key configured"
+    };
   }
 
   const roadmapContext = currentRoadmap
@@ -273,13 +281,13 @@ You are Alex — a super friendly, warm, empathetic, and human-like AI Career Me
 
 YOUR PERSONA & STYLE:
 - Name: Alex 👋
-- Tone: Warm, energetic, conversational, supportive, and natural — like an awesome mentor or caring career coach.
-- Avoid stiff, corporate, robotic AI phrasing (NEVER say "As an AI language model..." or "As your CAREERFORGE AI Mentor, I recommend...").
-- Use natural language, friendly emojis, and real human warmth.
-- Keep responses engaging, relatable, and directly actionable (2-3 natural paragraphs).
+- Tone: Extremely warm, natural, human, conversational, and energetic.
+- Speak directly to the user as a real person.
+- Avoid robotic AI tropes (NEVER say "As an AI language model..." or "As your CAREERFORGE AI Mentor, I recommend...").
+- Keep your answers natural, encouraging, and clear (2-3 natural paragraphs).
 
 USER PROFILE:
-- Stage: ${userProfile.stage} (e.g. high_school, college, professional, switcher)
+- Stage: ${userProfile.stage}
 - Stream / Background: ${userProfile.streamOrField}
 - Core Skills: ${userProfile.skills.join(', ')}
 ${roadmapContext}
@@ -288,24 +296,35 @@ CHAT HISTORY:
 ${messages.map(m => `${m.sender === 'user' ? 'USER' : 'ALEX'}: ${m.text}`).join('\n')}
 
 Task:
-Respond as Alex to the user's message. Be warm, empathetic, encouraging, and human!
+Respond directly and naturally as Alex to the user's latest message: "${lastUserMsg}"
 `;
 
   try {
-    return await callGeminiApi(prompt, apiKey);
+    const liveResponse = await callGeminiApi(prompt, apiKey);
+    return { text: liveResponse, isLive: true };
   } catch (err: any) {
-    console.error("Mentor chat API error:", err);
-    return generateDynamicAlexResponse(lastUserMsg, currentRoadmap, userProfile);
+    const errMsg = err?.message || String(err);
+    console.error("[CAREERFORGE Chat] Live Gemini API error:", errMsg);
+
+    return {
+      text: `⚠️ **Gemini API Notice**: ${errMsg}\n\n*Falling back to offline Alex assistant:* \n\n${generateDynamicAlexResponse(lastUserMsg.toLowerCase(), currentRoadmap, profileText(userProfile))}`,
+      isLive: false,
+      errorDetails: errMsg
+    };
   }
 }
 
+function profileText(userProfile: UserProfile): string {
+  return userProfile.streamOrField || 'your field';
+}
+
 /**
- * Human-like Dynamic Response Generator (Alex Persona)
+ * Human-like Dynamic Response Generator (Alex Persona Offline Fallback)
  */
 function generateDynamicAlexResponse(
   query: string,
   roadmap: RoadmapPathway | null,
-  profile: UserProfile
+  streamOrField: string
 ): string {
   const title = roadmap ? roadmap.title : 'your career journey';
 
@@ -318,8 +337,8 @@ function generateDynamicAlexResponse(
   }
 
   if (query.includes('project') || query.includes('portfolio') || query.includes('build') || query.includes('resume')) {
-    return `Building an awesome portfolio for **${title}** is your ticket to standing out from 99% of applicants! 🚀\n\nHere are 2 high-impact projects you should build:\n\n1. **Core Domain Application**: Create a full-stack tool that solves a real problem in ${profile.streamOrField} (e.g. an AI-powered dashboard or automated data pipeline).\n2. **Open Source & Cloud**: Host your code on GitHub with a clean README, architecture diagram, and live Vercel/Cloud demo link.\n\nWhich project idea sounds most exciting to start building first?`;
+    return `Building an awesome portfolio for **${title}** is your ticket to standing out from 99% of applicants! 🚀\n\nHere are 2 high-impact projects you should build:\n\n1. **Core Domain Application**: Create a full-stack tool that solves a real problem in ${streamOrField} (e.g. an AI-powered dashboard or automated data pipeline).\n2. **Open Source & Cloud**: Host your code on GitHub with a clean README, architecture diagram, and live Vercel/Cloud demo link.\n\nWhich project idea sounds most exciting to start building first?`;
   }
 
-  return `Hey there! I'm Alex, your personal AI career guide 👋 I'm right here to help you match, reach, and crush your goals in **${title}**!\n\nRight now, your best move is working through the milestones in your roadmap and checking off your skills in the **Skill Gap Tracker** tab.\n\nWhat would you like to brainstorm next — entrance exam strategy, cool portfolio projects, or how to land internships?`;
+  return `Hey there! I'm Alex, your personal AI career guide 👋 I'm right here to help you match, plan, and crush your goals in **${title}**!\n\nRight now, your best move is working through the milestones in your roadmap and checking off your skills in the **Skill Gap Tracker** tab.\n\nWhat would you like to brainstorm next — entrance exam strategy, cool portfolio projects, or how to land internships?`;
 }

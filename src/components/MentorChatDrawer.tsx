@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Send, Sparkles, User, Bot, RefreshCw, ChevronRight } from 'lucide-react';
+import { X, Send, Sparkles, User, Bot, RefreshCw, ChevronRight, ShieldCheck, AlertCircle } from 'lucide-react';
 import type { ChatMessage, RoadmapPathway, UserProfile } from '../types/career';
-import { sendMentorChatMessage } from '../services/geminiService';
+import { sendMentorChatMessage, getStoredApiKey } from '../services/geminiService';
 
 interface MentorChatDrawerProps {
   currentRoadmap: RoadmapPathway | null;
@@ -20,6 +20,10 @@ export const MentorChatDrawer: React.FC<MentorChatDrawerProps> = ({
   userProfile,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const apiKey = getStoredApiKey();
+  const [lastApiStatus, setLastApiStatus] = useState<'live' | 'fallback' | 'error'>(apiKey ? 'live' : 'fallback');
+  const [apiErrorMessage, setApiErrorMessage] = useState<string>('');
+
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome-1',
@@ -54,16 +58,29 @@ export const MentorChatDrawer: React.FC<MentorChatDrawerProps> = ({
     setIsTyping(true);
 
     try {
-      const aiReplyText = await sendMentorChatMessage(newMessages, currentRoadmap, userProfile);
+      const result = await sendMentorChatMessage(newMessages, currentRoadmap, userProfile);
+      
+      if (result.isLive) {
+        setLastApiStatus('live');
+        setApiErrorMessage('');
+      } else {
+        setLastApiStatus(result.errorDetails ? 'error' : 'fallback');
+        if (result.errorDetails) {
+          setApiErrorMessage(result.errorDetails);
+        }
+      }
+
       const aiMsg: ChatMessage = {
         id: `ai-${Date.now()}`,
         sender: 'ai',
-        text: aiReplyText,
+        text: result.text,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages((prev) => [...prev, aiMsg]);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Chat error:", err);
+      setLastApiStatus('error');
+      setApiErrorMessage(err?.message || 'API connection failed');
     } finally {
       setIsTyping(false);
     }
@@ -91,26 +108,45 @@ export const MentorChatDrawer: React.FC<MentorChatDrawerProps> = ({
           <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
             <div className="w-screen max-w-md bg-slate-950 border-l border-slate-800 shadow-2xl flex flex-col justify-between animate-slide-up">
               
-              {/* Header */}
-              <div className="p-4 sm:p-6 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-blue-500/10 text-blue-400 rounded-xl border border-blue-500/20">
-                    <Sparkles className="w-5 h-5" />
+              {/* Header with Live Status Indicator */}
+              <div className="p-4 sm:p-6 bg-slate-900/90 border-b border-slate-800 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-blue-500/10 text-blue-400 rounded-xl border border-blue-500/20">
+                      <Sparkles className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-extrabold text-white text-sm">Alex • AI Career Mentor</h3>
+                      <p className="text-[11px] text-slate-400">
+                        Target: {currentRoadmap ? currentRoadmap.title : 'General Guidance'}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-extrabold text-white text-sm">Alex • AI Career Mentor</h3>
-                    <p className="text-[11px] text-slate-400">
-                      Target: {currentRoadmap ? currentRoadmap.title : 'General Guidance'}
-                    </p>
-                  </div>
+
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
                 </div>
 
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                {/* API Status Badge */}
+                <div className="flex items-center justify-between pt-1">
+                  {lastApiStatus === 'live' ? (
+                    <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                      <ShieldCheck className="w-3 h-3" /> Live Gemini API Connected
+                    </span>
+                  ) : lastApiStatus === 'error' ? (
+                    <span className="text-[10px] font-bold text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" /> API Error: {apiErrorMessage || 'Key Error'}
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                      ⚡ Demo Mode (Add API Key in Header for Live AI)
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Chat Messages Body */}
@@ -144,7 +180,7 @@ export const MentorChatDrawer: React.FC<MentorChatDrawerProps> = ({
                 {isTyping && (
                   <div className="flex items-center gap-2 text-slate-400 text-xs italic">
                     <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-400" />
-                    <span>Alex is thinking...</span>
+                    <span>Alex is calling Gemini AI...</span>
                   </div>
                 )}
                 <div ref={chatEndRef} />
