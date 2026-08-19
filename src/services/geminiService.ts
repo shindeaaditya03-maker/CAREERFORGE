@@ -4,7 +4,11 @@ import { MOCK_ROADMAPS_HIGH_SCHOOL, MOCK_PARENT_BRIEFS } from '../data/mockRoadm
 const API_KEY_STORAGE_KEY = 'CAREERFORGE_GEMINI_KEY';
 
 export const getStoredApiKey = (): string => {
-  const rawKey = localStorage.getItem(API_KEY_STORAGE_KEY) || import.meta.env.VITE_GEMINI_API_KEY || '';
+  const rawKey =
+    localStorage.getItem(API_KEY_STORAGE_KEY) ||
+    import.meta.env.VITE_GEMINI_API_KEY ||
+    import.meta.env.GEMINI_API_KEY ||
+    '';
   return rawKey.trim().replace(/^["']|["']$/g, '');
 };
 
@@ -256,6 +260,7 @@ export async function sendMentorChatMessage(
   const lastUserMsg = messages[messages.length - 1]?.text.toLowerCase() || '';
 
   if (!apiKey) {
+    console.log("No Gemini API key found for chat. Using dynamic fallback counselor.");
     return generateDynamicFallbackResponse(lastUserMsg, currentRoadmap, userProfile);
   }
 
@@ -278,7 +283,7 @@ Respond to the latest user message with clear, actionable, encouraging advice. K
     console.error("Mentor chat API error:", err);
     const errorString = err?.message || String(err);
     if (errorString.includes('API key') || errorString.includes('400') || errorString.includes('403')) {
-      return `⚠️ API Key Issue Detected: ${errorString}.\n\nPlease check your key by clicking the "Key" button in the top bar. You can obtain a free key at https://aistudio.google.com/app/apikey.\n\nIn the meantime, here is my guidance for your question:\n\n${generateDynamicFallbackResponse(lastUserMsg, currentRoadmap, userProfile)}`;
+      return `⚠️ API Key Error: ${errorString}.\n\nPlease verify your API key in the top bar ("Key" button) or add VITE_GEMINI_API_KEY in Vercel Environment Variables.`;
     }
     return generateDynamicFallbackResponse(lastUserMsg, currentRoadmap, userProfile);
   }
